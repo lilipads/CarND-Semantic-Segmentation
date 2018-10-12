@@ -133,7 +133,7 @@ def run():
     num_classes = 2
     image_shape = (160, 576)
     data_dir = './data'
-    image_data_dir = '/small_data'
+    image_data_dir = '/data_road'
     runs_dir = './runs'
     # tests.test_for_kitti_dataset(data_dir)
 
@@ -144,8 +144,8 @@ def run():
     # You'll need a GPU with at least 10 teraFLOPS to train on.
     # https://www.cityscapes-dataset.com/
 
-    epochs = 1
-    batch_size = 1
+    epochs = 30
+    batch_size = 32
 
     with tf.Session() as sess:
         # Path to vgg model

@@ -1,48 +1,54 @@
 # Semantic Segmentation
 ### Introduction
-In this project, you'll label the pixels of a road in images using a Fully Convolutional Network (FCN).
+In this project, I implemented a Fully Convolutional Network (FCN) using Tensorflow to label the pixels of a road in images. The idea is based on this paper: https://people.eecs.berkeley.edu/~jonlong/long_shelhamer_fcn.pdf.
 
-### Setup
-##### GPU
-`main.py` will check to make sure you are using GPU - if you don't have a GPU on your system, you can use AWS or another cloud computing platform.
-##### Frameworks and Packages
-Make sure you have the following is installed:
- - [Python 3](https://www.python.org/)
- - [TensorFlow](https://www.tensorflow.org/)
- - [NumPy](http://www.numpy.org/)
- - [SciPy](https://www.scipy.org/)
-##### Dataset
-Download the [Kitti Road dataset](http://www.cvlibs.net/datasets/kitti/eval_road.php) from [here](http://www.cvlibs.net/download.php?file=data_road.zip).  Extract the dataset in the `data` folder.  This will create the folder `data_road` with all the training a test images.
+### Dataset
+We use the [Kitti Road dataset](http://www.cvlibs.net/datasets/kitti/eval_road.php) downloaded from [here](http://www.cvlibs.net/download.php?file=data_road.zip). There are 289 labelled images for training and 290 unlabelled imaged for testing. 
 
-### Start
-##### Implement
-Implement the code in the `main.py` module indicated by the "TODO" comments.
-The comments indicated with "OPTIONAL" tag are not required to complete.
-##### Run
-Run the following command to run the project:
-```
-python main.py
-```
-**Note** If running this in Jupyter Notebook system messages, such as those regarding test status, may appear in the terminal rather than the notebook.
+Sample training image:
+[sample training image](/img/sample_training.png)
 
-### Submission
-1. Ensure you've passed all the unit tests.
-2. Ensure you pass all points on [the rubric](https://review.udacity.com/#!/rubrics/989/view).
-3. Submit the following in a zip file.
- - `helper.py`
- - `main.py`
- - `project_tests.py`
- - Newest inference images from `runs` folder  (**all images from the most recent run**)
- 
- ### Tips
-- The link for the frozen `VGG16` model is hardcoded into `helper.py`.  The model can be found [here](https://s3-us-west-1.amazonaws.com/udacity-selfdrivingcar/vgg.zip).
-- The model is not vanilla `VGG16`, but a fully convolutional version, which already contains the 1x1 convolutions to replace the fully connected layers. Please see this [post](https://s3-us-west-1.amazonaws.com/udacity-selfdrivingcar/forum_archive/Semantic_Segmentation_advice.pdf) for more information.  A summary of additional points, follow. 
-- The original FCN-8s was trained in stages. The authors later uploaded a version that was trained all at once to their GitHub repo.  The version in the GitHub repo has one important difference: The outputs of pooling layers 3 and 4 are scaled before they are fed into the 1x1 convolutions.  As a result, some students have found that the model learns much better with the scaling layers included. The model may not converge substantially faster, but may reach a higher IoU and accuracy. 
-- When adding l2-regularization, setting a regularizer in the arguments of the `tf.layers` is not enough. Regularization loss terms must be manually added to your loss function. otherwise regularization is not implemented.
- 
-### Using GitHub and Creating Effective READMEs
-If you are unfamiliar with GitHub , Udacity has a brief [GitHub tutorial](http://blog.udacity.com/2015/06/a-beginners-git-github-tutorial.html) to get you started. Udacity also provides a more detailed free [course on git and GitHub](https://www.udacity.com/course/how-to-use-git-and-github--ud775).
+Sample training image label:
+[sample training image label](/img/sample_training_label.png)
 
-To learn about REAMDE files and Markdown, Udacity provides a free [course on READMEs](https://www.udacity.com/courses/ud777), as well. 
 
-GitHub also provides a [tutorial](https://guides.github.com/features/mastering-markdown/) about creating Markdown files.
+### Architecture
+
+[architecture schema](img/architecture.pg?raw=true "Architecture of the Fully Convolutional Network")
+
+I used the pre-trained VGG model ([download link](https://s3-us-west-1.amazonaws.com/udacity-selfdrivingcar/vgg.zip)) for the encoder layers. To make the depth dimension compatible with the final output (2, which is the number of classes: road pixel or non-road pixel), I first used 1x1 filters to convolve the vgg layer output. For vgg layer 3, 4, 7, after the 1x1 convolution, they remain they original width and height, and now with a depth of 2.
+
+Next after scaling up the layers (because they were re-scaled in the VGG model), I upsampled (or transpose convolve) these layers. In convolution, we apply element-wise multiplication on two matrices (the kernel and a patch of the layer output) to get a scalar; the idea of transpose convolution is that instead of element-wise multiplication, we take one element from the layer output, multiply it with each element in the kernel (scalar x matrix multiplication) and add up the overlapping regions.
+
+Another key idea in the original FCN paper is skip connections. To better retain information from the original image and the encoding layers, we directly add up the upsampled layers in the decoding part of the network and the earlier corresponding encoding layers. They have the same dimension.
+
+See implemention in main.py:layers().
+
+The loss function is cross entropy (plus l2 regularization).
+
+### Optimization
+A few learnings from the parameter tuning phase:
+
+1. Smaller batch size (I used 4) produces better result.
+2. With the convolutional kernels, activation function such as ReLu is not necessary and possibly can make the reuslts worse.
+3. Xavier or other intialization for the kernels make a big difference. I used Xavier initializer.
+4. Regularization is important: both L2 regularization for each kernel and a 50% dropout rate in training.
+5. I obtained the best result with a learning rate of 0.0001 using Adam Optimizer after 25 epochs.
+
+Classification results before optimization:
+[um_000004.png](img/um_0000004.png)
+
+Classification results after optimization:
+[after image](runs/11/epoch25/um_000004.png)
+
+### Results
+
+Full final results on the test images can be viewed under the runs directory. Here are a few examples:
+
+[exmaple1](runs/11/epoch25/uu_000069.png)
+[exmaple2](runs/11/epoch25/umm_000075.png)
+[exmaple3](runs/11/epoch25/um_000061.png)
+
+
+### Training Details
+Trained on AWS GPU (p2.xlarge instance, 61 GiB Memory), train 25 epochs takes about half an hour. Used tensorflow-gpu 1.3.0.

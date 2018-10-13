@@ -100,4 +100,3 @@ ENV/
 # mypy
 .mypy_cache/
 NVIDIA-Linux-x86_64-375.66.run
-RUNS/

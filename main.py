@@ -48,20 +48,20 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     """
     # 1 by 1 convolution
     layer3_1_1 = tf.layers.conv2d(vgg_layer3_out, num_classes,
-        kernel_size=1,padding="same", strides=1,
-        kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4))
+        kernel_size=1, padding="same", strides=1,
+        kernel_regularizer=tf.contrib.layers.l2_regularizer(0.001))
     # scaling
     layer3_1_1 = tf.multiply(layer3_1_1, 0.0001)
 
     layer4_1_1 = tf.layers.conv2d(vgg_layer4_out, num_classes,
-        kernel_size=1,padding="same", strides=1,
-        kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4))
+        kernel_size=1, padding="same", strides=1,
+        kernel_regularizer=tf.contrib.layers.l2_regularizer(0.001))
     # scaling
     layer4_1_1 = tf.multiply(layer4_1_1, 0.01)
 
     layer7_1_1 = tf.layers.conv2d(vgg_layer7_out, num_classes,
-        kernel_size=1,padding="same", strides=1,
-        kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4))
+        kernel_size=1, padding="same", strides=1,
+        kernel_regularizer=tf.contrib.layers.l2_regularizer(0.001))
 
 
     upsampled_2_conv7 = tf.layers.conv2d_transpose(layer7_1_1, num_classes,
@@ -102,7 +102,7 @@ tests.test_optimize(optimize)
 
 
 def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input_image,
-             correct_label, keep_prob, learning_rate):
+             correct_label, keep_prob, learning_rate, base_epoch=0):
     """
     Train neural network and print out the loss during training.
     :param sess: TF Session
@@ -115,10 +115,12 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     :param correct_label: TF Placeholder for label images
     :param keep_prob: TF Placeholder for dropout keep probability
     :param learning_rate: TF Placeholder for learning rate
+    :param base_epoch: in the case when we need to save checkpoints, we call this function in multi iterations.
+        base_epoch is the aboslute number of epochs we have trained so far.
     :return: none
     """
     for i in range(epochs):
-        print("Epoch " + str(i))
+        print("Epoch " + str(i + base_epoch))
         total_loss = 0
         for images, labels in get_batches_fn(batch_size):
             _, loss = sess.run([train_op, cross_entropy_loss], feed_dict={
@@ -133,9 +135,12 @@ def run():
     num_classes = 2
     image_shape = (160, 576)
     data_dir = './data'
-    image_data_dir = '/small_data'
+    # image_data_dir = '/small_data'
+    image_data_dir = '/data_road'
     runs_dir = './runs'
-    # tests.test_for_kitti_dataset(data_dir)
+    if image_data_dir == '/data_road':
+        tests.test_for_kitti_dataset(data_dir + image_data_dir)
+    save_dir = helper.get_save_dir_name(runs_dir)
 
     # Download pretrained vgg model
     helper.maybe_download_pretrained_vgg(data_dir)
@@ -144,8 +149,8 @@ def run():
     # You'll need a GPU with at least 10 teraFLOPS to train on.
     # https://www.cityscapes-dataset.com/
 
-    epochs = 1
-    batch_size = 1
+    epochs = 50
+    batch_size = 32
 
     with tf.Session() as sess:
         # Path to vgg model
@@ -163,14 +168,37 @@ def run():
         correct_label = tf.placeholder(tf.float32, (None, None, None, num_classes))
         logits, train_op, cross_entropy_loss = optimize(nn_last_layer, correct_label, learning_rate, num_classes)
 
-        # Train NN using the train_nn function
         sess.run(tf.global_variables_initializer())
-        train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, image_input,
-             correct_label, keep_prob, learning_rate)
 
-        # Save inference data using helper.save_inference_samples
-        helper.save_inference_samples(runs_dir, data_dir + image_data_dir, sess, image_shape, logits, keep_prob, image_input)
+        # Train NN using the train_nn function
 
+        # save results in checkpoints, for hyper parameter tuning during training
+        if True:
+            checkpoints = []
+            for i in range(epochs):
+                if i >= 20 and i % 5 == 0:
+                    checkpoints.append(i)
+            if epochs - 1 != i:
+                checkpoints.append(epochs - 1)  # add the last epoch
+
+            prev_checkpoint = 0
+            for ckpt in checkpoints:
+                ckpt_epoch = ckpt - prev_checkpoint
+                train_nn(sess, ckpt_epoch, batch_size, get_batches_fn, train_op, cross_entropy_loss, image_input,
+                     correct_label, keep_prob, learning_rate, base_epoch=prev_checkpoint)
+
+                # Save inference data using helper.save_inference_samples
+                epoch_dir = "/epoch" + str(ckpt)
+                helper.save_inference_samples(save_dir + epoch_dir, data_dir + image_data_dir, sess,
+                    image_shape, logits, keep_prob, image_input)
+                prev_checkpoint = ckpt
+
+        # train in one go without saving checkpoints
+        else:
+            train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, image_input,
+                correct_label, keep_prob, learning_rate)
+            helper.save_inference_samples(save_dir, data_dir + image_data_dir, sess,
+                image_shape, logits, keep_prob, image_input)
 
 if __name__ == '__main__':
     run()

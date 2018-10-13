@@ -124,17 +124,34 @@ def gen_test_output(sess, logits, keep_prob, image_pl, data_folder, image_shape)
 
         yield os.path.basename(image_file), np.array(street_im)
 
+def get_save_dir_name(runs_dir):
+    """
+    Each run is saved in a numbered directory. The directory name increments by 1 each time.
 
-def save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image):
-    # Make folder for current run
-    output_dir = os.path.join(runs_dir, str(time.time()))
+    Return the directory path to save for results of the current run. e.g. "/runs/10"
+    """
+    current_saved_dir_num = max([int(os.path.basename(dir)) for dir in glob(runs_dir + "/*")])
+    save_dir = '/' + str(current_saved_dir_num + 1)
+    output_dir = runs_dir + save_dir
+    return output_dir
+
+def save_inference_samples(output_dir, data_dir, sess, image_shape, logits, keep_prob, input_image):
+    # Make folder
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
     os.makedirs(output_dir)
 
     # Run NN on test images and save them to HD
-    print('Training Finished. Saving test images to: {}'.format(output_dir))
+    print('Saving test images to: {}'.format(output_dir))
     image_outputs = gen_test_output(
         sess, logits, keep_prob, input_image, os.path.join(data_dir, 'testing'), image_shape)
     for name, image in image_outputs:
         scipy.misc.imsave(os.path.join(output_dir, name), image)
+
+    # save model
+    ## saver = tf.train.Saver()
+    ## if os.path.exists(output_dir + '/model'):
+    ##     shutil.rmtree(output_dir + '/model')
+    ## os.makedirs(output_dir + '/model')
+    ## save_path = saver.save(sess, output_dir + '/model/model.ckpt')
+    ## print("Model saved in %s" % save_path)

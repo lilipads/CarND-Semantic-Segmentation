@@ -133,9 +133,10 @@ def run():
     num_classes = 2
     image_shape = (160, 576)
     data_dir = './data'
+    # image_data_dir = '/small_data'
     image_data_dir = '/data_road'
     runs_dir = './runs'
-    # tests.test_for_kitti_dataset(data_dir)
+    tests.test_for_kitti_dataset(data_dir)
 
     # Download pretrained vgg model
     helper.maybe_download_pretrained_vgg(data_dir)

@@ -14,7 +14,7 @@ Sample training image label:
 
 ### Architecture
 
-[architecture schema](img/architecture.pg?raw=true "Architecture of the Fully Convolutional Network")
+![architecture schema](img/architecture.png?raw=true "Architecture of the Fully Convolutional Network")
 
 I used the pre-trained VGG model ([download link](https://s3-us-west-1.amazonaws.com/udacity-selfdrivingcar/vgg.zip)) for the encoder layers. To make the depth dimension compatible with the final output (2, which is the number of classes: road pixel or non-road pixel), I first used 1x1 filters to convolve the vgg layer output. For vgg layer 3, 4, 7, after the 1x1 convolution, they remain they original width and height, and now with a depth of 2.
 
@@ -36,18 +36,18 @@ A few learnings from the parameter tuning phase:
 5. I obtained the best result with a learning rate of 0.0001 using Adam Optimizer after 25 epochs.
 
 Classification results before optimization:
-[um_000004.png](img/um_0000004.png)
+![um_000004.png](img/um_0000004.png)
 
 Classification results after optimization:
-[after image](runs/11/epoch25/um_000004.png)
+![after image](runs/11/epoch25/um_000004.png)
 
 ### Results
 
 Full final results on the test images can be viewed under the runs directory. Here are a few examples:
 
-[exmaple1](runs/11/epoch25/uu_000069.png)
-[exmaple2](runs/11/epoch25/umm_000075.png)
-[exmaple3](runs/11/epoch25/um_000061.png)
+![exmaple1](runs/11/epoch25/uu_000069.png)
+![exmaple2](runs/11/epoch25/umm_000008.png)
+![exmaple3](runs/11/epoch25/um_000061.png)
 
 
 ### Training Details

@@ -6,10 +6,12 @@ In this project, I implemented a Fully Convolutional Network (FCN) using Tensorf
 We use the [Kitti Road dataset](http://www.cvlibs.net/datasets/kitti/eval_road.php) downloaded from [here](http://www.cvlibs.net/download.php?file=data_road.zip). There are 289 labelled images for training and 290 unlabelled imaged for testing. 
 
 Sample training image:
-[sample training image](/img/sample_training.png)
+
+![sample training image](/img/sample_training.png)
 
 Sample training image label:
-[sample training image label](/img/sample_training_label.png)
+
+![sample training image label](/img/sample_training_label.png)
 
 
 ### Architecture

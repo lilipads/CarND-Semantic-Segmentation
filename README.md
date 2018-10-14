@@ -36,9 +36,11 @@ A few learnings from the parameter tuning phase:
 5. I obtained the best result with a learning rate of 0.0001 using Adam Optimizer after 25 epochs.
 
 Classification results before optimization:
-![um_000004.png](img/um_0000004.png)
+
+![um_000004.png](img/um_000004.png)
 
 Classification results after optimization:
+
 ![after image](runs/11/epoch25/um_000004.png)
 
 ### Results
@@ -46,7 +48,9 @@ Classification results after optimization:
 Full final results on the test images can be viewed under the runs directory. Here are a few examples:
 
 ![exmaple1](runs/11/epoch25/uu_000069.png)
+
 ![exmaple2](runs/11/epoch25/umm_000008.png)
+
 ![exmaple3](runs/11/epoch25/um_000061.png)
 
 

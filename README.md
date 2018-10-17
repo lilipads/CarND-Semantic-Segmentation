@@ -57,4 +57,4 @@ Full final results on the test images can be viewed under the runs directory. He
 
 
 ### Training Details
-Trained on AWS GPU (p2.xlarge instance, 61 GiB Memory), train 25 epochs takes about half an hour. Used tensorflow-gpu 1.3.0.
+Trained on AWS GPU (p2.xlarge instance, 61 GiB Memory), training 25 epochs takes about half an hour. Used tensorflow-gpu 1.3.0.

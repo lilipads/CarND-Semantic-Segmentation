@@ -18,7 +18,7 @@ Sample training image label:
 
 ![architecture schema](img/architecture.png?raw=true "Architecture of the Fully Convolutional Network")
 
-I used the pre-trained VGG model ([download link](https://s3-us-west-1.amazonaws.com/udacity-selfdrivingcar/vgg.zip)) for the encoder layers. To make the depth dimension compatible with the final output (1, which is the probability that the given pixel is a road pixel), I first used 1x1 filters to convolve the vgg layer output. For vgg layer 3, 4, 7, after the 1x1 convolution, they remain their original width and height, and now with a depth of 2.
+I used the pre-trained VGG model ([download link](https://s3-us-west-1.amazonaws.com/udacity-selfdrivingcar/vgg.zip)) for the encoder layers. To make the depth dimension compatible with the final output (2, which is the number of classes: road pixel or non-road pixel), I first used 1x1 filters to convolve the vgg layer output. For vgg layer 3, 4, 7, after the 1x1 convolution, they remain their original width and height, and now with a depth of 2.
 
 Next after scaling up the layers (because they were re-scaled in the VGG model), I upsampled (or transpose convolve) these layers. In convolution, we apply element-wise multiplication on two matrices (the kernel and a patch of the layer output) to get a scalar; the idea of transpose convolution is that instead of element-wise multiplication, we take one element from the layer output, multiply it with each element in the kernel (scalar x matrix multiplication) and add up the overlapping regions.
 
